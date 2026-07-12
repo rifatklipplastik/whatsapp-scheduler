@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreEventRequest;
 
 class EventController extends Controller
 {
@@ -12,7 +14,11 @@ class EventController extends Controller
      */
     public function index()
     {
-        //
+        $events = Event::where('user_id', Auth::id())
+            ->orderBy('start_time')
+            ->get();
+
+        return view('events.index', compact('events'));
     }
 
     /**
@@ -20,15 +26,33 @@ class EventController extends Controller
      */
     public function create()
     {
-        //
+        return view('events.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEventRequest $request)
     {
-        //
+        Event::create([
+            'user_id' => Auth::id(),
+            'source' => 'manual',
+            'external_id' => null,
+
+            'title' => $request->title,
+            'description' => $request->description,
+            'location' => $request->location,
+            'notification_phone' => $request->notification_phone,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+
+            'reminder_minutes' => 15,
+            'status' => 'pending',
+        ]);
+
+        return redirect()
+            ->route('events.index')
+            ->with('success', 'Event created successfully.');
     }
 
     /**
